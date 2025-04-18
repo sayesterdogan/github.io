@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İkinci El Eşyalar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .product, .login-form, .register-form, .add-product-form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px 0;
+        }
+
+        .product img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .product button {
+            margin-top: 10px;
+        }
+
+        #cart {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 20px;
+        }
+
+        #cart h2 {
+            margin-top: 0;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .cart-item span {
+            font-weight: bold;
+        }
+
+        .checkout {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .checkout:hover {
+            background-color: #45a049;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        let currentUser = null;
+        let cart = [];
+
+        // Kullanıcı kaydı
+        function registerUser() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            
+            if (username && password) {
+                localStorage.setItem('user', JSON.stringify({ username, password }));
+                alert("Kayıt başarılı!");
+                document.getElementById('register-form').reset();
+                switchToLoginForm();
+            } else {
+                alert("Kullanıcı adı ve şifre girin.");
+            }
+        }
+
+        // Kullanıcı girişi
+        function loginUser() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            const storedUser = JSON.parse(localStorage.getItem('user'));
+            if (storedUser && storedUser.username === username && storedUser.password === password) {
+                currentUser = storedUser;
+                alert("Giriş başarılı!");
+                document.getElementById('login-form').reset();
+                displayLoggedInView();
+            } else {
+                alert("Geçersiz kullanıcı adı veya şifre.");
+            }
+        }
+
+        // Ürün yükleme
+        function addProduct() {
+            const productName = document.getElementById('product-name').value;
+            const productPrice = parseFloat(document.getElementById('product-price').value);
+            const productImage = document.getElementById('product-image').value;
+
+            if (productName && productPrice && productImage) {
+                const product = { name: productName, price: productPrice, image: productImage };
+                displayProduct(product);
+                alert("Ürün başarıyla eklendi!");
+                document.getElementById('add-product-form').reset();
+            } else {
+                alert("Ürün adı, fiyat ve resim bağlantısı girin.");
+            }
+        }
+
+        // Ürünleri listeleme
+        function displayProduct(product) {
+            const productsContainer = document.getElementById('products-container');
+            const productDiv = document.createElement('div');
+            productDiv.classList.add('product');
+            productDiv.innerHTML = `
+                <img src="${product.image}" alt="${product.name}">
+                <h3>${product.name}</h3>
+                <p>₺${product.price}</p>
+                <button onclick="addToCart('${product.name}', ${product.price}, '${product.image}')">Sepete Ekle</button>
+            `;
+            productsContainer.appendChild(productDiv);
+        }
+
+        // Sepete ürün ekleme
+        function addToCart(productName, price, image) {
+            cart.push({ name: productName, price: price, image: image });
+            updateCart();
+        }
+
+        // Sepet güncelleme
+        function updateCart() {
+            const cartContainer = document.getElementById('cart-items');
+            const totalPriceContainer = document.getElementById('total-price');
+            cartContainer.innerHTML = '';
+            let totalPrice = 0;
+
+            cart.forEach(item => {
+                const cartItem = document.createElement('div');
+                cartItem.classList.add('cart-item');
+                cartItem.innerHTML = `${item.name} - ₺${item.price}`;
+                cartContainer.appendChild(cartItem);
+                totalPrice += item.price;
+            });
+
+            totalPriceContainer.innerHTML = `Toplam: ₺${totalPrice}`;
+        }
+
+        // Ödeme yapma
+        function checkout() {
+            if (cart.length === 0) {
+                alert("Sepetiniz boş.");
+            } else {
+                alert("Ödeme başarıyla tamamlandı!");
+                cart = [];
+                updateCart();
+            }
+        }
+
+        // Kullanıcı girişi sonrası görünüm
+        function displayLoggedInView() {
+            document.getElementById('user-info').innerHTML = `Hoş geldiniz, ${currentUser.username}!`;
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('product-upload-container').style.display = 'block';
+            document.getElementById('cart').style.display = 'block';
+        }
+
+        // Kayıt formuna geçiş
+        function switchToRegisterForm() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        }
+
+        // Giriş formuna geçiş
+        function switchToLoginForm() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        }
+
+        // Sayfa yüklendiğinde yapılacak işlemler
+        window.onload = function() {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('product-upload-container').style.display = 'block';
+                document.getElementById('cart').style.display = 'block';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div id="login-container">
+            <h2>Giriş Yap</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Kullanıcı Adı:</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Şifre:</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="button" onclick="loginUser()">Giriş Yap</button>
+                <p>Hesabınız yok mu? <a href="javascript:void(0)" onclick="switchToRegisterForm()">Kayıt olun</a></p>
+            </form>
+        </div>
+
+        <div id="register-container">
+            <h2>Kayıt Ol</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-username">Kullanıcı Adı:</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Şifre:</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <button type="button" onclick="registerUser()">Kayıt Ol</button>
+                <p>Zaten hesabınız var mı? <a href="javascript:void(0)" onclick="switchToLoginForm()">Giriş yap</a></p>
+            </form>
+        </div>
+
+        <div id="product-upload-container" style="display:none;">
+            <h2>Ürün Yükle</h2>
+            <form id="add-product-form">
+                <div class="form-group">
+                    <label for="product-name">Ürün Adı:</label>
+                    <input type="text" id="product-name" required>*
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Fiyat:</label>
+                    <input type="number" id="product-price" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-image">Resim URL:</label>
+                    <input type="text" id="product-image" required>
+                </div>
+                <button type="button" onclick="addProduct()">Ürün Yükle</button>
+            </form> 
+        </div>
+
+        <div id="products-container">
+            <h2>Ürünler</h2>
+            <!-- Ürünler burada listelenecek -->
+        </div>
+
+        <div id="user-info"></div>
+
+        <div id="cart" style="display:none;">
+            <h2>Sepetiniz</h2>
+            <div id="cart-items"></div>
+            <div id="total-price"></div>
+            
+            <div>
+                
+            </div>
+                                                                                                                
+        </div>
+    </div>
+</body>
+</html>
